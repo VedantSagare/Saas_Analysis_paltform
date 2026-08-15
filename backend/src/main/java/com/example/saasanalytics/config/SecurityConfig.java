@@ -44,9 +44,12 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/actuator/health").permitAll()
-                        .anyRequest().authenticated()
+                    .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/actuator/health").permitAll()
+                    .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                    .requestMatchers("/api/analytics/**").hasAnyRole("ANALYST", "ADMIN")
+                    .requestMatchers("/api/view/**").hasAnyRole("VIEWER", "ANALYST", "ADMIN")
+                    .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());
 

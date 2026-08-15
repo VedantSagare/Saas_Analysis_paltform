@@ -9,6 +9,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 
@@ -35,11 +37,27 @@ public class AuthService {
             return Optional.empty();
         }
 
+        // Determine role: default to VIEWER. If caller is ADMIN and provided a valid role, honor it.
+        String desired = req.getRole();
+        String assignedRole = "ROLE_VIEWER";
+
+        if (desired != null && !desired.isBlank()) {
+            String normalized = desired.trim().toUpperCase();
+            if (normalized.equals("ADMIN") || normalized.equals("ANALYST") || normalized.equals("VIEWER")) {
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                boolean callerIsAdmin = auth != null && auth.isAuthenticated() && auth.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                if (callerIsAdmin) {
+                    assignedRole = "ROLE_" + normalized;
+                }
+            }
+        }
+
         User user = new User();
         user.setUsername(req.getUsername());
         user.setEmail(req.getEmail());
         user.setPassword(passwordEncoder.encode(req.getPassword()));
-        user.setRole("ROLE_USER");
+        user.setRole(assignedRole);
 
         return Optional.of(userRepository.save(user));
     }

@@ -18,6 +18,8 @@ public class RegisterRequest {
     @Size(min = 6, max = 128)
     private String password;
 
+    private String role;
+
     public String getUsername() {
         return username;
     }
@@ -40,5 +42,13 @@ public class RegisterRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }
