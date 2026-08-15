@@ -1,0 +1,12 @@
+# Root
+node_modules/
+frontend/node_modules/
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+*.log
+.env
+.env.*
+.DS_Store
+coverage/
+.vscode/
+.idea/
