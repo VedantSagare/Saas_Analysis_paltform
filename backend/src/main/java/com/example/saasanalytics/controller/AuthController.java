@@ -28,10 +28,26 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req) {
         try {
-            String token = authService.login(req);
-            return ResponseEntity.ok(new AuthResponse(token));
+            var resp = authService.login(req);
+            return ResponseEntity.ok(resp);
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Invalid username or password");
         }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(@Valid @RequestBody com.example.saasanalytics.auth.dto.RefreshRequest req) {
+        try {
+            var resp = authService.refreshAccessToken(req.getRefreshToken());
+            return ResponseEntity.ok(resp);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(401).body("Invalid or expired refresh token");
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@Valid @RequestBody com.example.saasanalytics.auth.dto.RefreshRequest req) {
+        authService.logout(req.getRefreshToken());
+        return ResponseEntity.ok().build();
     }
 }

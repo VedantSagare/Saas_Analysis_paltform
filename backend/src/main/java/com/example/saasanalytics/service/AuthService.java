@@ -21,15 +21,18 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager,
-                       JwtUtil jwtUtil) {
+                       JwtUtil jwtUtil,
+                       RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public Optional<User> register(RegisterRequest req) {
@@ -62,10 +65,30 @@ public class AuthService {
         return Optional.of(userRepository.save(user));
     }
 
-    public String login(LoginRequest req) {
+    public com.example.saasanalytics.auth.dto.AuthResponse login(LoginRequest req) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword())
         );
-        return jwtUtil.generateToken(req.getUsername());
+        String accessToken = jwtUtil.generateToken(req.getUsername());
+        User user = userRepository.findByUsername(req.getUsername()).orElseThrow();
+        var refresh = refreshTokenService.createRefreshToken(user);
+        return new com.example.saasanalytics.auth.dto.AuthResponse(accessToken, refresh.getToken());
+    }
+
+    public com.example.saasanalytics.auth.dto.AuthResponse refreshAccessToken(String refreshToken) {
+        var maybe = refreshTokenService.findByToken(refreshToken);
+        if (maybe.isEmpty() || refreshTokenService.isExpired(maybe.get())) {
+            throw new IllegalArgumentException("Invalid or expired refresh token");
+        }
+        User user = maybe.get().getUser();
+        // Optionally rotate refresh token: delete old and create new
+        refreshTokenService.deleteByToken(refreshToken);
+        var newRefresh = refreshTokenService.createRefreshToken(user);
+        String newAccess = jwtUtil.generateToken(user.getUsername());
+        return new com.example.saasanalytics.auth.dto.AuthResponse(newAccess, newRefresh.getToken());
+    }
+
+    public void logout(String refreshToken) {
+        refreshTokenService.deleteByToken(refreshToken);
     }
 }
