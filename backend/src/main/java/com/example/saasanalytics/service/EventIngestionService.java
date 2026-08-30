@@ -4,6 +4,7 @@ import com.example.saasanalytics.config.TenantContext;
 import com.example.saasanalytics.domain.ApiKey;
 import com.example.saasanalytics.domain.EventDeadLetter;
 import com.example.saasanalytics.domain.EventIngestion;
+import com.example.saasanalytics.domain.Tenant;
 import com.example.saasanalytics.repository.EventDeadLetterRepository;
 import com.example.saasanalytics.repository.EventIngestionRepository;
 import com.example.saasanalytics.web.dto.EventIngestionRequest;
@@ -44,7 +45,12 @@ public class EventIngestionService {
         ApiKey apiKey = apiKeyService.validateApiKey(apiKeyValue)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid API key for this tenant"));
 
+        Tenant tenant = apiKey.getTenant();
         Long tenantId = TenantContext.getTenantId();
+        if (tenantId == null && tenant != null) {
+            tenantId = tenant.getId();
+            TenantContext.setTenant(tenantId, tenant.getSchemaName());
+        }
         if (tenantId == null) {
             throw new IllegalStateException("Tenant context is missing");
         }
