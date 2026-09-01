@@ -22,6 +22,15 @@ public class EventProcessingMetadata {
     @Column(name = "source_topic", nullable = false)
     private String sourceTopic;
 
+    @Column(name = "event_type")
+    private String eventType;
+
+    @Column(name = "user_id")
+    private String userId;
+
+    @Column(name = "latency_ms")
+    private Long latencyMs;
+
     @Column(nullable = false)
     private String status;
 
@@ -67,6 +76,30 @@ public class EventProcessingMetadata {
 
     public void setSourceTopic(String sourceTopic) {
         this.sourceTopic = sourceTopic;
+    }
+
+    public String getEventType() {
+        return eventType;
+    }
+
+    public void setEventType(String eventType) {
+        this.eventType = eventType;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public Long getLatencyMs() {
+        return latencyMs;
+    }
+
+    public void setLatencyMs(Long latencyMs) {
+        this.latencyMs = latencyMs;
     }
 
     public String getStatus() {

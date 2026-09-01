@@ -37,6 +37,12 @@ public class EventProcessingConsumer {
                 JsonNode node = objectMapper.readTree(record.value());
                 String eventId = record.key();
                 Long tenantId = node.has("tenantId") ? node.get("tenantId").asLong() : 0L;
+                String eventType = node.has("eventType") ? node.get("eventType").asText()
+                        : node.has("event_type") ? node.get("event_type").asText() : "UNKNOWN";
+                String userId = node.has("userId") ? node.get("userId").asText()
+                        : node.has("user_id") ? node.get("user_id").asText() : null;
+                Long latencyMs = node.has("latencyMs") ? node.get("latencyMs").asLong() :
+                        node.has("latency_ms") ? node.get("latency_ms").asLong() : null;
                 String status = node.has("status") ? node.get("status").asText() : "PROCESSED";
 
                 EventProcessingMetadata metadata = metadataRepository.findByTenantIdAndEventId(tenantId, eventId)
@@ -45,6 +51,9 @@ public class EventProcessingConsumer {
                 metadata.setEventId(eventId);
                 metadata.setTenantId(tenantId);
                 metadata.setSourceTopic(record.topic());
+                metadata.setEventType(eventType);
+                metadata.setUserId(userId);
+                metadata.setLatencyMs(latencyMs);
                 metadata.setStatus(status);
                 metadata.setPayload(record.value());
                 metadata.setProcessedAt(Instant.now());
