@@ -5,6 +5,8 @@ import com.example.saasanalytics.repository.EventProcessingMetadataRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -46,6 +48,16 @@ public class AnalyticsService {
 
         return new AnalyticsSummary(distinctUserIds.size(), eventCounts, topEvents, funnels, retention,
                 new LatencyMetrics(p95, p99));
+    }
+
+    public List<ActivityPoint> getDailyActivity(Long tenantId, Instant from, Instant to) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd").withZone(ZoneOffset.UTC);
+        return metadataRepository.findDailyActivityByTenantIdAndCreatedAtBetween(tenantId, from, to).stream()
+                .map(row -> new ActivityPoint(
+                        formatter.format(((java.util.Date) row[0]).toInstant()),
+                        ((Number) row[2]).longValue(),
+                        ((Number) row[1]).longValue()))
+                .toList();
     }
 
     private List<FunnelStage> buildFunnels(List<EventProcessingMetadata> events) {
@@ -101,5 +113,8 @@ public class AnalyticsService {
     }
 
     public record LatencyMetrics(double p95Ms, double p99Ms) {
+    }
+
+    public record ActivityPoint(String day, long users, long events) {
     }
 }

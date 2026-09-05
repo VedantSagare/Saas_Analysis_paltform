@@ -8,3 +8,10 @@ export async function getAnalyticsSummary(tenantId, from, to) {
 	});
 	return response.data;
 }
+
+export async function getAnalyticsActivity(tenantId, from, to) {
+	const response = await client.get('/api/analytics/activity', {
+		params: { tenantId, from: from.toISOString(), to: to.toISOString() },
+	});
+	return response.data;
+}

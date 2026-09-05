@@ -28,4 +28,17 @@ public interface EventProcessingMetadataRepository extends JpaRepository<EventPr
     List<Long> findLatencyMsByTenantIdAndCreatedAtBetween(@Param("tenantId") Long tenantId,
                                                          @Param("from") Instant from,
                                                          @Param("to") Instant to);
+
+    @Query(value = """
+            SELECT date_trunc('day', created_at) AS bucket,
+                   COUNT(*) AS event_count,
+                   COUNT(DISTINCT user_id) AS user_count
+            FROM event_processing_metadata
+            WHERE tenant_id = :tenantId AND created_at BETWEEN :from AND :to
+            GROUP BY bucket
+            ORDER BY bucket
+            """, nativeQuery = true)
+    List<Object[]> findDailyActivityByTenantIdAndCreatedAtBetween(@Param("tenantId") Long tenantId,
+                                                                   @Param("from") Instant from,
+                                                                   @Param("to") Instant to);
 }
